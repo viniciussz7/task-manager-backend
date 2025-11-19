@@ -1,0 +1,10 @@
+'EOF'
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+instance/
+uploads/
+.vscode/
+EOF
