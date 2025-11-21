@@ -7,5 +7,5 @@ __pycache__/
 instance/
 uploads/
 .vscode/
-dev.db
+app.db
 EOF
