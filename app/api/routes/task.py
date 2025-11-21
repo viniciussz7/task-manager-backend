@@ -1,71 +1,46 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends, status
 from typing import List
-from datetime import datetime
+
+from sqlalchemy.orm import Session
 
 from app.schemas.task import Task, TaskCreate, TaskUpdate
+from app.services.task_service import get_tasks, get_task, create_task, update_task, delete_task
+from app.db.session import get_db
 
 router = APIRouter()
 
-# Simulação de um banco de dados em memória
-fake_db = []
-current_id = 1
+# Cada rota recebe uma sessão de banco de dados via dependência get_db, garantindo que cada requisição tenha seu próprio contexto de banco de dados.
+# As operações de CRUD são delegadas aos serviços definidos em task_service.py, mantendo as rotas limpas e focadas na lógica de API.
 
+@router.post("/", response_model=Task, status_code=status.HTTP_201_CREATED) # response_model define o que a rota deve retornar — e valida isso com Pydantic.
+def create(payload: TaskCreate, db: Session = Depends(get_db)):
+    return create_task(db, payload)
 
-@router.post("/", response_model=Task) # response_model define o que a rota deve retornar — e valida isso com Pydantic.
-def crate_task(payload: TaskCreate):
-    global current_id
-
-    new_task = Task(
-        id=current_id,
-        title=payload.title,
-        description=payload.description,
-        completed=payload.completed,
-        created_at=datetime.utcnow()
-    )
-
-    current_id += 1
-    fake_db.append(new_task)
-    
-    return new_task
 
 @router.get("/", response_model=List[Task])
-def list_tasks(limit: int = 10, offset: int = 0): # Paginação simples em memória
-    return fake_db[offset: offset + limit]
+def read_all(limit: int = 10, offset: int = 0, db: Session = Depends(get_db)):
+    return get_tasks(db, limit=limit, offset=offset)
+
 
 @router.get("/{task_id}", response_model=Task)
-def get_task(task_id: int):
-    for task in fake_db:
-        if task.id == task_id:
-            return task
-        
+def read_one(task_id: int, db: Session = Depends(get_db)):
+    task = get_task(db, task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return task
+
+
 @router.put("/tasks/{task_id}", response_model=Task)
-def update_task(task_id: int, payload: TaskUpdate):
-    # 1. Encontrar a tarefa no "banco"
-    for index, task in enumerate(fake_db):
-        if task.id == task_id:
+def put(task_id: int, payload: TaskUpdate, db: Session = Depends(get_db)):
+    updated = update_task(db, task_id, payload)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return updated
 
-            # 2. Converter o Task para dict
-            task_data = task.model_dump()
 
-            # 3. Atualizar somente campos enviados no payload
-            update_data = payload.model_dump(exclude_unset=True)
-
-            # 4. Atualizar o dicionário da tarefa
-            updated_task = Task(**task_data, **update_data)
-
-            # 5. Salvar de volta no "banco"
-            fake_db[index] = updated_task
-
-            return updated_task
-
-    # Se não achar o id
-    raise HTTPException(status_code=404, detail="Task not found")
-
-@router.delete("/{task_id}", status_code=204)
-def delete_task(task_id: int):
-    for index, task in enumerate(fake_db):
-        if task.id == task_id:
-            del fake_db[index] # deletar a tarefa
-            return # 204 No Content
-    
-    raise HTTPException(status_code=404, detail="Task not found")
+@router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remove(task_id: int, db: Session = Depends(get_db)):
+    ok = delete_task(db, task_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return
