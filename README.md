@@ -67,7 +67,7 @@ http://127.0.0.1:8000/docs
 ## 🖥 Swagger UI
 
 <p align="center">
-  <img src="assets\swagger.png" alt="Swagger Docs" width="800"/>
+  <img src="assets/swagger.png" alt="Swagger Docs" width="800"/>
 </p>
 
 ---
