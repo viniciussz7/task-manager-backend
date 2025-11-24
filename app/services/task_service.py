@@ -7,46 +7,67 @@ from app.schemas.task import TaskCreate, TaskUpdate
 
 
 # Busca lista de tarefas com paginação
-def get_tasks(db: Session, limit: int = 10, offset: int = 0) -> List[TaskModel]:
-    stmt = select(TaskModel).offset(offset).limit(limit).order_by(TaskModel.id)
-    result = db.execute(stmt).scalars().all()
-    return result
+def get_tasks(
+        db: Session,
+        user_id: int,
+        limit: int = 10,
+        offset: int = 0
+    ) -> List[TaskModel]:
+        stmt = (
+            select(TaskModel)
+            .filter(TaskModel.owner_id == user_id)
+            .offset(offset)
+            .limit(limit).
+            order_by(TaskModel.id)
+        )   
+        return db.execute(stmt).scalars().all()
 
-# Busca uma tarefa por ID
-def get_task(db: Session, task_id: int) -> Optional[TaskModel]:
-    return db.get(TaskModel, task_id) # Usa o método get para buscar por chave primária
+# Busca uma tarefa por ID, garantindo que pertence ao usuário
+def get_task(db: Session, task_id: int, user_id: int) -> Optional[TaskModel]:
+    stmt = (
+        select(TaskModel)
+        .filter(TaskModel.id == task_id)
+        .filter(TaskModel.owner_id == user_id)
+    )
+    return db.execute(stmt).scalar_one_or_none()
 
 # Cria uma nova tarefa
-def create_task(db: Session, task_in: TaskCreate) -> TaskModel:
-    db_obj = TaskModel(
-        title=task_in.title,
-        description=task_in.description,
-        completed=task_in.completed)
-    db.add(db_obj)
+def create_task(db: Session, task_data: TaskCreate, user_id: int) -> TaskModel:
+    new_task = TaskModel(
+        title=task_data.title,
+        description=task_data.description,
+        completed=task_data.completed,
+        owner_id=user_id
+    )
+        
+    db.add(new_task)
     db.commit()
-    db.refresh(db_obj) # Atualiza o objeto com dados do DB (ex: ID gerado)
-    return db_obj
+    db.refresh(new_task) # Atualiza o objeto com dados do DB (ex: ID gerado)
+    return new_task
 
 # Atualiza uma tarefa existente
-def update_task(db: Session, task_id: int, task_in: TaskUpdate) -> Optional[TaskModel]:
-    db_obj = db.get(TaskModel, task_id)
-    if not db_obj:
+def update_task(db: Session, task_id: int, task_data: TaskUpdate, user_id: int) -> Optional[TaskModel]:
+    updated_task = get_task(db, task_id, user_id)
+    if not updated_task:
         return None
     
-    update_data = task_in.model_dump(exclude_unset=True)
+    update_data = task_data.model_dump(exclude_unset=True)
+
     for key, value in update_data.items(): # Atualiza apenas os campos fornecidos
-        setattr(db_obj, key, value) # Define o atributo dinamicamente
-    db.add(db_obj)
+        setattr(updated_task, key, value) # Define o atributo dinamicamente
+
+    db.add(updated_task)
     db.commit()
-    db.refresh(db_obj)
-    return db_obj
+    db.refresh(updated_task)
+    return updated_task
 
 # Deleta uma tarefa por ID
-def delete_task(db: Session, task_id: int) -> bool:
-    db_obj = db.get(TaskModel, task_id)
-    if not db_obj:
+def delete_task(db: Session, task_id: int, user_id: int) -> bool:
+    deleted_task = get_task(db, task_id, user_id)
+    if not deleted_task:
         return False
-    db.delete(db_obj)
+    
+    db.delete(deleted_task)
     db.commit()
     return True
 

@@ -22,8 +22,6 @@ def create_app() -> FastAPI:
     
     app.include_router(api_router)
 
-    bearer_scheme = HTTPBearer()
-
     return app
 
 app = create_app()
