@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer
 
 from app.api.api_router import api_router
 from app.core.config import settings
@@ -20,6 +21,8 @@ def create_app() -> FastAPI:
         }
     
     app.include_router(api_router)
+
+    bearer_scheme = HTTPBearer()
 
     return app
 

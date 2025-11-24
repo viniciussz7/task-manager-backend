@@ -11,8 +11,7 @@ class Task(Base):
     description = Column(Text, nullable=True)
     completed = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    owner_id = Column(Integer, ForeignKey("users.id"))
 
-
-# se futuramente ligar com User:
-# owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-# owner = relationship("User", back_populates="tasks")
+    # Reacionamento com a tabela User
+    owner = relationship("User", back_populates="tasks")

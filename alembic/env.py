@@ -23,7 +23,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from app.db.base import Base # Importa a Base onde os modelos são registrados
 from app.core.config import settings # Importa as configurações da aplicação
-from app.models import task as task_model  # Importa todos os modelos para o Alembic reconhecer as tabelas
+from app.models import user, task  # Importa todos os modelos para o Alembic reconhecer as tabelas
 
 # add your model's MetaData object here
 # for 'autogenerate' support
@@ -78,7 +78,7 @@ def run_migrations_online():
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection, target_metadata=target_metadata, render_as_batch=True
         )
 
         with context.begin_transaction():
