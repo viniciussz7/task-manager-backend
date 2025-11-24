@@ -66,7 +66,9 @@ http://127.0.0.1:8000/docs
 
 ## 🖥 Swagger UI
 
-![Swagger Docs](https://github.com/viniciussz7/task-manager-backend/blob/main/assets/swagger.png?raw=true)
+<p align="center">
+  <img src="assets/swagger.png" alt="Swagger Docs" width="800"/>
+</p>
 
 ---
 
