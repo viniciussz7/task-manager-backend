@@ -5,14 +5,10 @@ from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
+
 from app.db.session import get_db
 from app.services.user_service import get_user_by_email
-
-# Configurações do JWT
-SECRET_KEY = "super_secret_key_change_me" # Em produção, use uma chave segura e secreta
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 # 1 hora
-
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """Cria um token de acesso JWT."""
@@ -21,11 +17,11 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
     to_encode.update({"exp": expire})
 
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
 
@@ -55,7 +51,7 @@ def extract_token(request: Request) -> str:
 def get_current_user(token: str = Depends(extract_token), db: Session = Depends(get_db)):
     """Valida o token JWT e retorna o usuário atual."""
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         email: str = payload.get("sub")
 
         if email is None:
