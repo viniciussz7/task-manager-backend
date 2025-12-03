@@ -48,8 +48,28 @@ pip install -r requirements.txt
 
 **4. Configure variáveis de ambiente (.env):**
 ```bash
-SECRET_KEY=uma_chave_super_secreta
+# ============================
+# Application Configuration
+# ============================
+APP_NAME="Task Manager API"
+APP_VERSION="0.1.0"
+ENVIRONMENT="development"  # development | production
+
+# ============================
+# Security
+# ============================
+SECRET_KEY="change-me-in-production"
+ALGORITHM="HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES=60
+
+# ============================
+# Database
+# ============================
+# SQLite (default)
+DATABASE_URL="sqlite:///./app.db"
+
+# Postgres (exemplo)
+# DATABASE_URL="postgresql://user:password@localhost:5432/mydb"
 ```
 
 **5. Execute a aplicação:**
@@ -102,19 +122,23 @@ Todas as rotas de tarefas exigem autenticação JWT. Use o botão Authorize no S
 
 - Tokens JWT com expiração configurável
 
+- Filtros e ordenação avançada de tarefas (por status, titulo ou data)
+  
 - Estrutura modular (```routes```, ```schemas```, ```services```, ```models```, ```core```)
 
 - CORS configurado
 
 - Dependências gerenciadas via FastAPI ```Depends```
 
+- Suporte a variáveis de ambiente (.env + .env.example)
+  
+- Leitura de configurações via pydantic settings
 ---
 
 ## 🌟 Melhorias e próximos passos
 
 Funcionalidades planejadas para evoluções futuras:
 
-- Filtros e ordenação avançada de tarefas (por status ou data)
 
 - Refresh tokens e expiração configurável para uso real
 
