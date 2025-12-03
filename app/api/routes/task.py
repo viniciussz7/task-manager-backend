@@ -24,8 +24,8 @@ def create(payload: TaskCreate, db: Session = Depends(get_db), current_user: Use
 
 # Rota para ler todas as tarefas do usuário autenticado com paginação
 @router.get("/", response_model=List[Task], dependencies=[Depends(security)])
-def read_all(limit: int = 10, offset: int = 0, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return get_tasks(db, current_user.id, limit=limit, offset=offset)
+def read_all(limit: int = 10, offset: int = 0, completed: bool | None = None, sort_by: str | None = None, order: str = "asc", db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return get_tasks(db=db, user_id=current_user.id, limit=limit, offset=offset, completed=completed, sort_by=sort_by, order=order)
 
 # Rota para ler uma tarefa específica do usuário autenticado
 @router.get("/{task_id}", response_model=Task, dependencies=[Depends(security)])

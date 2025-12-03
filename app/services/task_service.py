@@ -1,6 +1,6 @@
 from typing import List, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import select, update, delete
+from sqlalchemy import select, asc, desc, update, delete
 
 from app.models.task import Task as TaskModel
 from app.schemas.task import TaskCreate, TaskUpdate
@@ -11,15 +11,43 @@ def get_tasks(
         db: Session,
         user_id: int,
         limit: int = 10,
-        offset: int = 0
+        offset: int = 0,
+        completed: bool | None = None,
+        sort_by: str | None = None,
+        order: str = "asc"
     ) -> List[TaskModel]:
         stmt = (
             select(TaskModel)
             .filter(TaskModel.owner_id == user_id)
-            .offset(offset)
-            .limit(limit).
-            order_by(TaskModel.id)
-        )   
+        )
+
+        if completed is not None:
+            stmt = stmt.filter(TaskModel.completed == completed)
+
+        # Campos permitidos para ordenação
+        valid_fields = {
+            "id": TaskModel.id,
+            "title": TaskModel.title,
+            "completed": TaskModel.completed,
+            "created_at": TaskModel.created_at
+        }
+
+        if sort_by is not None:
+            if sort_by not in valid_fields:
+                raise ValueError(f"Invalid sort_by field: {sort_by}")
+            
+            column = valid_fields[sort_by]
+
+            if order == "desc":
+                stmt = stmt.order_by(desc(column))
+            else:
+                stmt = stmt.order_by(asc(column))
+
+        else:
+            stmt = stmt.order_by(asc(TaskModel.id)) # Ordenação padrão
+
+        stmt = stmt.limit(limit).offset(offset)
+                
         return db.execute(stmt).scalars().all()
 
 # Busca uma tarefa por ID, garantindo que pertence ao usuário
